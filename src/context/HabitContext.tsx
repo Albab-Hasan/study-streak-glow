@@ -47,7 +47,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (completionsError) throw completionsError;
 
-      // Map habit completions to habit objects
+      // Map database fields to our TypeScript model
       const habitsWithCompletions = habitsData.map((habit) => {
         // Find all completions for this habit
         const habitCompletions = completionsData.filter(
@@ -59,10 +59,24 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           (completion) => completion.completed_date
         );
         
-        return {
-          ...habit,
+        // Transform database model to our TypeScript model
+        const transformedHabit: Habit = {
+          id: habit.id,
+          name: habit.name,
+          description: habit.description || '',
+          category: habit.category,
+          icon: habit.icon,
+          color: habit.color,
+          frequency: habit.frequency,
+          daysOfWeek: habit.days_of_week as WeekDay[],
+          reminderTime: habit.reminder_time,
+          notificationsEnabled: habit.notifications_enabled || false,
+          createdAt: habit.created_at || new Date().toISOString(),
+          streak: habit.streak || 0,
           completedDates: completedDates
         };
+        
+        return transformedHabit;
       });
 
       setHabits(habitsWithCompletions);
@@ -109,23 +123,45 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
+      // Transform our TypeScript model to database model
+      const dbHabit = {
+        user_id: user.id,
+        name: newHabit.name,
+        description: newHabit.description,
+        category: newHabit.category,
+        icon: newHabit.icon,
+        color: newHabit.color,
+        frequency: newHabit.frequency,
+        days_of_week: newHabit.daysOfWeek,
+        reminder_time: newHabit.reminderTime,
+        notifications_enabled: newHabit.notificationsEnabled,
+        streak: 0
+      };
+      
       const { data, error } = await supabase
         .from('habits')
-        .insert([
-          {
-            ...newHabit,
-            user_id: user.id,
-            streak: 0,
-          }
-        ])
+        .insert([dbHabit])
         .select();
       
       if (error) throw error;
       
       // Add the new habit to state
       if (data && data.length > 0) {
-        const createdHabit = {
-          ...data[0],
+        const habit = data[0];
+        
+        const createdHabit: Habit = {
+          id: habit.id,
+          name: habit.name,
+          description: habit.description || '',
+          category: habit.category,
+          icon: habit.icon,
+          color: habit.color,
+          frequency: habit.frequency,
+          daysOfWeek: habit.days_of_week as WeekDay[],
+          reminderTime: habit.reminder_time,
+          notificationsEnabled: habit.notifications_enabled || false,
+          createdAt: habit.created_at || new Date().toISOString(),
+          streak: habit.streak || 0,
           completedDates: []
         };
         
@@ -143,12 +179,23 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
-      // Remove completedDates from the habit object as it's stored separately
-      const { completedDates, ...habitToUpdate } = updatedHabit;
+      // Transform our TypeScript model to database model
+      const dbHabit = {
+        name: updatedHabit.name,
+        description: updatedHabit.description,
+        category: updatedHabit.category,
+        icon: updatedHabit.icon,
+        color: updatedHabit.color,
+        frequency: updatedHabit.frequency,
+        days_of_week: updatedHabit.daysOfWeek,
+        reminder_time: updatedHabit.reminderTime,
+        notifications_enabled: updatedHabit.notificationsEnabled,
+        streak: updatedHabit.streak
+      };
       
       const { error } = await supabase
         .from('habits')
-        .update(habitToUpdate)
+        .update(dbHabit)
         .eq('id', updatedHabit.id)
         .eq('user_id', user.id);
       
@@ -286,7 +333,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const habitsForDate = habits.filter(habit => {
       if (habit.frequency === 'daily') return true;
-      return habit.days_of_week.includes(dayOfWeek);
+      return habit.daysOfWeek.includes(dayOfWeek);
     });
     
     const totalHabits = habitsForDate.length;
@@ -325,7 +372,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       const habitsForDate = habitsData.filter(habit => {
         if (habit.frequency === 'daily') return true;
-        return habit.days_of_week.includes(dayOfWeek);
+        return habit.daysOfWeek.includes(dayOfWeek);
       });
       
       const totalHabits = habitsForDate.length;
