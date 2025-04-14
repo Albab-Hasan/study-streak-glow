@@ -1,8 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Habit, DailyProgress, WeekDay } from '@/types/habit';
-import { mockHabits, weeklyProgress } from '@/data/mockData';
 import { getTodayStr, formatDate } from '@/lib/habitUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface HabitContextType {
   habits: Habit[];
@@ -13,71 +15,267 @@ interface HabitContextType {
   toggleHabitCompletion: (id: string, date: string) => void;
   selectedDate: string;
   setSelectedDate: (date: string) => void;
+  isLoading: boolean;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
 
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [habits, setHabits] = useState<Habit[]>(mockHabits);
-  const [progress, setProgress] = useState<DailyProgress[]>(weeklyProgress);
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [progress, setProgress] = useState<DailyProgress[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayStr());
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  const addHabit = (
+  const fetchHabits = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch all habits for the current user
+      const { data: habitsData, error: habitsError } = await supabase
+        .from('habits')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (habitsError) throw habitsError;
+
+      // Fetch all habit completions for the current user
+      const { data: completionsData, error: completionsError } = await supabase
+        .from('habit_completions')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (completionsError) throw completionsError;
+
+      // Map habit completions to habit objects
+      const habitsWithCompletions = habitsData.map((habit) => {
+        // Find all completions for this habit
+        const habitCompletions = completionsData.filter(
+          (completion) => completion.habit_id === habit.id
+        );
+        
+        // Extract just the dates from the completions
+        const completedDates = habitCompletions.map(
+          (completion) => completion.completed_date
+        );
+        
+        return {
+          ...habit,
+          completedDates: completedDates
+        };
+      });
+
+      setHabits(habitsWithCompletions);
+      updateProgressForAll(habitsWithCompletions);
+      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Error fetching habits:', error.message);
+      toast.error('Failed to load your habits');
+      setIsLoading(false);
+    }
+  };
+
+  // Setup realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    fetchHabits();
+
+    // Set up realtime subscriptions
+    const habitsChannel = supabase
+      .channel('habits-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'habits', filter: `user_id=eq.${user.id}` },
+        () => {
+          fetchHabits();
+        }
+      )
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'habit_completions', filter: `user_id=eq.${user.id}` },
+        () => {
+          fetchHabits();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(habitsChannel);
+    };
+  }, [user]);
+
+  const addHabit = async (
     newHabit: Omit<Habit, 'id' | 'createdAt' | 'streak' | 'completedDates'>
   ) => {
-    const habit: Habit = {
-      ...newHabit,
-      id: Date.now().toString(),
-      createdAt: getTodayStr(),
-      streak: 0,
-      completedDates: [],
-    };
-    setHabits([...habits, habit]);
-  };
-
-  const updateHabit = (updatedHabit: Habit) => {
-    setHabits(
-      habits.map((habit) => (habit.id === updatedHabit.id ? updatedHabit : habit))
-    );
-  };
-
-  const deleteHabit = (id: string) => {
-    setHabits(habits.filter((habit) => habit.id !== id));
-  };
-
-  const toggleHabitCompletion = (id: string, date: string) => {
-    setHabits(habits.map(habit => {
-      if (habit.id === id) {
-        const isCompleted = habit.completedDates.includes(date);
-        let completedDates = [...habit.completedDates];
-        let streak = habit.streak;
-        
-        if (isCompleted) {
-          // Remove the date from completedDates
-          completedDates = completedDates.filter(d => d !== date);
-          // If we're removing today's completion, reduce streak
-          if (date === getTodayStr()) {
-            streak = Math.max(0, streak - 1);
-          }
-        } else {
-          // Add the date to completedDates
-          completedDates.push(date);
-          // Sort dates chronologically
-          completedDates.sort();
-          
-          // If we're completing today, increment streak
-          if (date === getTodayStr()) {
-            streak += 1;
-          }
-        }
-        
-        return { ...habit, completedDates, streak };
-      }
-      return habit;
-    }));
+    if (!user) return;
     
-    // Also update progress data
-    updateProgressForDate(date);
+    try {
+      const { data, error } = await supabase
+        .from('habits')
+        .insert([
+          {
+            ...newHabit,
+            user_id: user.id,
+            streak: 0,
+          }
+        ])
+        .select();
+      
+      if (error) throw error;
+      
+      // Add the new habit to state
+      if (data && data.length > 0) {
+        const createdHabit = {
+          ...data[0],
+          completedDates: []
+        };
+        
+        setHabits([...habits, createdHabit]);
+        toast.success('Habit created successfully');
+        updateProgressForAll([...habits, createdHabit]);
+      }
+    } catch (error: any) {
+      console.error('Error adding habit:', error.message);
+      toast.error('Failed to create habit');
+    }
+  };
+
+  const updateHabit = async (updatedHabit: Habit) => {
+    if (!user) return;
+    
+    try {
+      // Remove completedDates from the habit object as it's stored separately
+      const { completedDates, ...habitToUpdate } = updatedHabit;
+      
+      const { error } = await supabase
+        .from('habits')
+        .update(habitToUpdate)
+        .eq('id', updatedHabit.id)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setHabits(
+        habits.map((habit) => (habit.id === updatedHabit.id ? updatedHabit : habit))
+      );
+      
+      toast.success('Habit updated successfully');
+    } catch (error: any) {
+      console.error('Error updating habit:', error.message);
+      toast.error('Failed to update habit');
+    }
+  };
+
+  const deleteHabit = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      const updatedHabits = habits.filter((habit) => habit.id !== id);
+      setHabits(updatedHabits);
+      updateProgressForAll(updatedHabits);
+      
+      toast.success('Habit deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting habit:', error.message);
+      toast.error('Failed to delete habit');
+    }
+  };
+
+  const toggleHabitCompletion = async (id: string, date: string) => {
+    if (!user) return;
+    
+    try {
+      const habit = habits.find(h => h.id === id);
+      if (!habit) return;
+      
+      const isCompleted = habit.completedDates.includes(date);
+      
+      if (isCompleted) {
+        // Remove completion
+        const { error } = await supabase
+          .from('habit_completions')
+          .delete()
+          .eq('habit_id', id)
+          .eq('user_id', user.id)
+          .eq('completed_date', date);
+        
+        if (error) throw error;
+        
+        // Update local state
+        setHabits(habits.map(h => {
+          if (h.id === id) {
+            const completedDates = h.completedDates.filter(d => d !== date);
+            let streak = h.streak;
+            
+            // If we're removing today's completion, reduce streak
+            if (date === getTodayStr()) {
+              streak = Math.max(0, streak - 1);
+            }
+            
+            return { ...h, completedDates, streak };
+          }
+          return h;
+        }));
+        
+        toast.success('Habit marked as incomplete');
+      } else {
+        // Add completion
+        const { error } = await supabase
+          .from('habit_completions')
+          .insert([
+            {
+              habit_id: id,
+              user_id: user.id,
+              completed_date: date
+            }
+          ]);
+        
+        if (error) throw error;
+        
+        // Update local state
+        setHabits(habits.map(h => {
+          if (h.id === id) {
+            const completedDates = [...h.completedDates, date].sort();
+            let streak = h.streak;
+            
+            // If we're completing today, increment streak
+            if (date === getTodayStr()) {
+              streak += 1;
+              
+              // Also update streak in database
+              supabase
+                .from('habits')
+                .update({ streak })
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .then(({ error }) => {
+                  if (error) console.error('Error updating streak:', error);
+                });
+            }
+            
+            return { ...h, completedDates, streak };
+          }
+          return h;
+        }));
+        
+        toast.success('Habit marked as complete');
+      }
+      
+      // Update progress data
+      updateProgressForDate(date);
+    } catch (error: any) {
+      console.error('Error toggling habit completion:', error.message);
+      toast.error('Failed to update habit completion');
+    }
   };
   
   const updateProgressForDate = (date: string) => {
@@ -88,7 +286,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const habitsForDate = habits.filter(habit => {
       if (habit.frequency === 'daily') return true;
-      return habit.daysOfWeek.includes(dayOfWeek);
+      return habit.days_of_week.includes(dayOfWeek);
     });
     
     const totalHabits = habitsForDate.length;
@@ -107,6 +305,39 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
   };
+  
+  const updateProgressForAll = (habitsData: Habit[]) => {
+    // Calculate progress data for the last 7 days
+    const today = new Date();
+    const dates = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      dates.push(formatDate(date));
+    }
+    
+    const progressData = dates.map(date => {
+      const habitDate = new Date(date);
+      const dayIndex = habitDate.getDay();
+      const weekDays: WeekDay[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const dayOfWeek = weekDays[dayIndex] as WeekDay;
+      
+      const habitsForDate = habitsData.filter(habit => {
+        if (habit.frequency === 'daily') return true;
+        return habit.days_of_week.includes(dayOfWeek);
+      });
+      
+      const totalHabits = habitsForDate.length;
+      const completedHabits = habitsForDate.filter(habit => 
+        habit.completedDates.includes(date)
+      ).length;
+      
+      return { date, totalHabits, completedHabits };
+    });
+    
+    setProgress(progressData);
+  };
 
   return (
     <HabitContext.Provider
@@ -119,6 +350,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleHabitCompletion,
         selectedDate,
         setSelectedDate,
+        isLoading
       }}
     >
       {children}

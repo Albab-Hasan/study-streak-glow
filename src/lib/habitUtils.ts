@@ -21,14 +21,14 @@ export function isHabitActiveOnDate(habit: Habit, dateStr: string): boolean {
   const date = new Date(dateStr);
   const dayIndex = date.getDay();
   const weekDays: WeekDay[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-  const dayOfWeek = weekDays[dayIndex] as WeekDay;
+  const dayOfWeek = weekDays[dayIndex];
   
   if (habit.frequency === 'daily') {
     return true;
   } else if (habit.frequency === 'weekly') {
-    return habit.daysOfWeek.includes(dayOfWeek);
+    return habit.days_of_week.includes(dayOfWeek);
   } else if (habit.frequency === 'custom') {
-    return habit.daysOfWeek.includes(dayOfWeek);
+    return habit.days_of_week.includes(dayOfWeek);
   }
   
   return false;

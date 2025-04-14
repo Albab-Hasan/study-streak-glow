@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useHabits } from '@/context/HabitContext';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import NavBar from '@/components/NavBar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,6 +30,7 @@ import {
   ExternalLink,
   Clock,
   Settings,
+  LogOut,
 } from 'lucide-react';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import { toast } from 'sonner';
@@ -36,6 +38,7 @@ import { toast } from 'sonner';
 const Profile = () => {
   const { habits } = useHabits();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -61,6 +64,15 @@ const Profile = () => {
       });
     }
   };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully');
+    } catch (error) {
+      toast.error('Error signing out');
+    }
+  };
   
   return (
     <div className="min-h-screen pb-20">
@@ -73,12 +85,16 @@ const Profile = () => {
         <div className="flex items-center gap-4 p-6 glass-card rounded-xl mb-8">
           <Avatar className="h-16 w-16 border-2 border-accent">
             <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-            <AvatarFallback>SU</AvatarFallback>
+            <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="text-xl font-bold">Student User</h2>
-            <p className="text-muted-foreground">student@example.com</p>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold">{user?.email?.split('@')[0] || 'User'}</h2>
+            <p className="text-muted-foreground">{user?.email || ''}</p>
           </div>
+          <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+            <LogOut size={16} />
+            Sign Out
+          </Button>
         </div>
         
         <Tabs defaultValue="settings">
