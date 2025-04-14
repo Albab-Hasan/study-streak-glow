@@ -203,7 +203,7 @@ const Profile = () => {
               </CardContent>
               <CardFooter className="border-t pt-6">
                 <p className="text-xs text-muted-foreground">
-                  StudyStreak v1.0 • Created with ❤️ by Lovable
+                  Loop v1.0 • Created with ❤️ by Albab Hasan
                 </p>
               </CardFooter>
             </Card>

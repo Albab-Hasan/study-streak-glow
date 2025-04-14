@@ -8,10 +8,12 @@ import DateSelector from '@/components/DateSelector';
 import HabitFilter from '@/components/HabitFilter';
 import HabitSearch from '@/components/HabitSearch';
 import HabitStats from '@/components/HabitStats';
-import { Bell, Search } from 'lucide-react';
+import NotificationCenter from '@/components/NotificationCenter';
 import NavBar from '@/components/NavBar';
 import { motivationalQuotes } from '@/data/mockData';
 import { HabitCategory } from '@/types/habit';
+import { Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const { habits, selectedDate } = useHabits();
@@ -19,6 +21,7 @@ const Index = () => {
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory | 'all'>('all');
+  const navigate = useNavigate();
   
   // Apply filters to habits
   const filteredHabits = getHabitsForDate(habits, selectedDate)
@@ -39,16 +42,17 @@ const Index = () => {
     <div className="min-h-screen pb-20">
       <header className="pt-6 px-4 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">StudyStreak</h1>
-          <p className="text-muted-foreground">Track your study habits</p>
+          <h1 className="text-2xl font-bold">Loop</h1>
+          <p className="text-muted-foreground">Track your daily habits</p>
         </div>
         <div className="flex gap-2">
-          <button className="p-2 rounded-full hover:bg-secondary transition-colors">
+          <button 
+            className="p-2 rounded-full hover:bg-secondary transition-colors"
+            onClick={() => navigate('/search')}
+          >
             <Search className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full hover:bg-secondary transition-colors">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationCenter />
         </div>
       </header>
       

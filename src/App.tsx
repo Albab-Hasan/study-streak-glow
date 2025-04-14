@@ -15,6 +15,7 @@ import AddHabit from "./pages/AddHabit";
 import EditHabit from "./pages/EditHabit";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
+import Search from "./pages/Search";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +60,11 @@ const App = () => (
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/search" element={
+                  <ProtectedRoute>
+                    <Search />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
