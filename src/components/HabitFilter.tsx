@@ -4,7 +4,7 @@ import { HabitCategory } from '@/types/habit';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Books, Heart, User, Users } from 'lucide-react';
 
 type HabitFilterProps = {
   selectedCategory: HabitCategory | 'all';
@@ -13,12 +13,12 @@ type HabitFilterProps = {
 
 const HabitFilter = ({ selectedCategory, onSelectCategory }: HabitFilterProps) => {
   const navigate = useNavigate();
-  const categories: Array<{ value: HabitCategory | 'all'; label: string }> = [
-    { value: 'all', label: 'All' },
-    { value: 'study', label: 'Study' },
-    { value: 'health', label: 'Health' },
-    { value: 'personal', label: 'Personal' },
-    { value: 'social', label: 'Social' },
+  const categories: Array<{ value: HabitCategory | 'all'; label: string; icon: React.ReactNode }> = [
+    { value: 'all', label: 'All', icon: <Books className="h-3.5 w-3.5" /> },
+    { value: 'study', label: 'Study', icon: <Books className="h-3.5 w-3.5" /> },
+    { value: 'health', label: 'Health', icon: <Heart className="h-3.5 w-3.5" /> },
+    { value: 'personal', label: 'Personal', icon: <User className="h-3.5 w-3.5" /> },
+    { value: 'social', label: 'Social', icon: <Users className="h-3.5 w-3.5" /> },
   ];
 
   return (
@@ -34,7 +34,8 @@ const HabitFilter = ({ selectedCategory, onSelectCategory }: HabitFilterProps) =
             selectedCategory === category.value && "bg-accent text-accent-foreground"
           )}
         >
-          {category.label}
+          {category.icon}
+          <span className="ml-1">{category.label}</span>
         </Button>
       ))}
       <Button
