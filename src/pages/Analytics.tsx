@@ -205,7 +205,11 @@ const Analytics = () => {
                       radius={[0, 4, 4, 0]}
                     >
                       {streakData.map((entry, index) => (
-                        <Bar key={`cell-${index}`} fill={entry.color} />
+                        <Bar 
+                          key={`cell-${index}`} 
+                          dataKey="streak"
+                          fill={entry.color} 
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -260,7 +264,11 @@ const Analytics = () => {
                       radius={[4, 4, 0, 0]}
                     >
                       {categoryData.map((entry, index) => (
-                        <Bar key={`cell-${index}`} fill={entry.color} />
+                        <Bar 
+                          key={`cell-${index}`}
+                          dataKey="count"
+                          fill={entry.color}
+                        />
                       ))}
                     </Bar>
                   </BarChart>

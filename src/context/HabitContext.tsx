@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Habit, DailyProgress } from '@/types/habit';
+import { Habit, DailyProgress, WeekDay } from '@/types/habit';
 import { mockHabits, weeklyProgress } from '@/data/mockData';
 import { getTodayStr, formatDate } from '@/lib/habitUtils';
 
@@ -81,10 +81,12 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
   
   const updateProgressForDate = (date: string) => {
+    const habitDate = new Date(date);
+    const dayIndex = habitDate.getDay();
+    const weekDays: WeekDay[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const dayOfWeek = weekDays[dayIndex] as WeekDay;
+    
     const habitsForDate = habits.filter(habit => {
-      const habitDate = new Date(date);
-      const dayOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][habitDate.getDay()];
-      
       if (habit.frequency === 'daily') return true;
       return habit.daysOfWeek.includes(dayOfWeek);
     });

@@ -9,7 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string | null
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          category: string
+          color: string
+          created_at: string | null
+          days_of_week: string[]
+          description: string | null
+          frequency: string
+          icon: string
+          id: string
+          name: string
+          notifications_enabled: boolean | null
+          reminder_time: string | null
+          streak: number | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          color: string
+          created_at?: string | null
+          days_of_week: string[]
+          description?: string | null
+          frequency: string
+          icon: string
+          id?: string
+          name: string
+          notifications_enabled?: boolean | null
+          reminder_time?: string | null
+          streak?: number | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string | null
+          days_of_week?: string[]
+          description?: string | null
+          frequency?: string
+          icon?: string
+          id?: string
+          name?: string
+          notifications_enabled?: boolean | null
+          reminder_time?: string | null
+          streak?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,5 +1,5 @@
 
-import { Habit } from '@/types/habit';
+import { Habit, WeekDay } from '@/types/habit';
 
 export function calculateCompletionPercentage(habits: Habit[], date: string): number {
   if (!habits.length) return 0;
@@ -19,7 +19,9 @@ export function calculateCompletionPercentage(habits: Habit[], date: string): nu
 
 export function isHabitActiveOnDate(habit: Habit, dateStr: string): boolean {
   const date = new Date(dateStr);
-  const dayOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()];
+  const dayIndex = date.getDay();
+  const weekDays: WeekDay[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayOfWeek = weekDays[dayIndex] as WeekDay;
   
   if (habit.frequency === 'daily') {
     return true;
