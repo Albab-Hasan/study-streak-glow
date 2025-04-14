@@ -5,15 +5,30 @@ import { getHabitsForDate, calculateCompletionPercentage, getRandomQuote } from 
 import HabitCard from '@/components/HabitCard';
 import ProgressRing from '@/components/ProgressRing';
 import DateSelector from '@/components/DateSelector';
+import HabitFilter from '@/components/HabitFilter';
+import HabitSearch from '@/components/HabitSearch';
+import HabitStats from '@/components/HabitStats';
 import { Bell, Search } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import { motivationalQuotes } from '@/data/mockData';
+import { HabitCategory } from '@/types/habit';
 
 const Index = () => {
   const { habits, selectedDate } = useHabits();
   const [quote, setQuote] = useState('');
   const [completionPercentage, setCompletionPercentage] = useState(0);
-  const habitsForDate = getHabitsForDate(habits, selectedDate);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<HabitCategory | 'all'>('all');
+  
+  // Apply filters to habits
+  const filteredHabits = getHabitsForDate(habits, selectedDate)
+    .filter(habit => 
+      selectedCategory === 'all' || habit.category === selectedCategory
+    )
+    .filter(habit => 
+      habit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      habit.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   
   useEffect(() => {
     setQuote(getRandomQuote(motivationalQuotes));
@@ -51,23 +66,39 @@ const Index = () => {
           </ProgressRing>
         </div>
         
+        <HabitStats />
+        
         <DateSelector />
         
-        <div className="mt-8">
+        <div className="mt-6">
+          <HabitSearch 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+          
+          <HabitFilter
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+          
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Today's habits</h2>
             <span className="text-sm text-muted-foreground">
-              {habitsForDate.length} habit{habitsForDate.length !== 1 ? 's' : ''}
+              {filteredHabits.length} habit{filteredHabits.length !== 1 ? 's' : ''}
             </span>
           </div>
           
-          {habitsForDate.length > 0 ? (
-            habitsForDate.map(habit => (
+          {filteredHabits.length > 0 ? (
+            filteredHabits.map(habit => (
               <HabitCard key={habit.id} habit={habit} date={selectedDate} />
             ))
           ) : (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No habits scheduled for today</p>
+              <p className="text-muted-foreground">
+                {searchTerm || selectedCategory !== 'all' 
+                  ? 'No habits match your filters' 
+                  : 'No habits scheduled for today'}
+              </p>
             </div>
           )}
         </div>

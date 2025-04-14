@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Habit, DailyProgress, WeekDay, HabitCategory, HabitFrequency } from '@/types/habit';
 import { 
@@ -8,6 +7,7 @@ import {
   castToHabitFrequency, 
   castToWeekDayArray 
 } from '@/lib/habitUtils';
+import { calculateMaxStreak, isStreakActive } from '@/lib/streakUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -37,7 +37,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
-      // Fetch all habits for the current user
       const { data: habitsData, error: habitsError } = await supabase
         .from('habits')
         .select('*')
@@ -45,7 +44,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (habitsError) throw habitsError;
 
-      // Fetch all habit completions for the current user
       const { data: completionsData, error: completionsError } = await supabase
         .from('habit_completions')
         .select('*')
@@ -53,19 +51,30 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (completionsError) throw completionsError;
 
-      // Map database fields to our TypeScript model
       const habitsWithCompletions = habitsData.map((habit) => {
-        // Find all completions for this habit
         const habitCompletions = completionsData.filter(
           (completion) => completion.habit_id === habit.id
         );
         
-        // Extract just the dates from the completions
         const completedDates = habitCompletions.map(
           (completion) => completion.completed_date
         );
         
-        // Transform database model to our TypeScript model with proper type casting
+        let streak = habit.streak || 0;
+        
+        const maxStreak = calculateMaxStreak(completedDates);
+        if (maxStreak > streak) {
+          streak = maxStreak;
+          
+          supabase
+            .from('habits')
+            .update({ streak: maxStreak })
+            .eq('id', habit.id)
+            .then(({ error }) => {
+              if (error) console.error('Error updating streak:', error);
+            });
+        }
+        
         const transformedHabit: Habit = {
           id: habit.id,
           name: habit.name,
@@ -78,7 +87,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           reminderTime: habit.reminder_time,
           notificationsEnabled: habit.notifications_enabled || false,
           createdAt: habit.created_at || new Date().toISOString(),
-          streak: habit.streak || 0,
+          streak: streak,
           completedDates: completedDates
         };
         
@@ -95,13 +104,11 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Setup realtime subscription
   useEffect(() => {
     if (!user) return;
 
     fetchHabits();
 
-    // Set up realtime subscriptions
     const habitsChannel = supabase
       .channel('habits-changes')
       .on('postgres_changes', 
@@ -129,7 +136,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
-      // Transform our TypeScript model to database model
       const dbHabit = {
         user_id: user.id,
         name: newHabit.name,
@@ -151,7 +157,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (error) throw error;
       
-      // Add the new habit to state
       if (data && data.length > 0) {
         const habit = data[0];
         
@@ -185,7 +190,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
-      // Transform our TypeScript model to database model
       const dbHabit = {
         name: updatedHabit.name,
         description: updatedHabit.description,
@@ -207,7 +211,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (error) throw error;
       
-      // Update local state
       setHabits(
         habits.map((habit) => (habit.id === updatedHabit.id ? updatedHabit : habit))
       );
@@ -231,7 +234,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (error) throw error;
       
-      // Update local state
       const updatedHabits = habits.filter((habit) => habit.id !== id);
       setHabits(updatedHabits);
       updateProgressForAll(updatedHabits);
@@ -253,7 +255,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const isCompleted = habit.completedDates.includes(date);
       
       if (isCompleted) {
-        // Remove completion
         const { error } = await supabase
           .from('habit_completions')
           .delete()
@@ -263,15 +264,22 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         if (error) throw error;
         
-        // Update local state
         setHabits(habits.map(h => {
           if (h.id === id) {
             const completedDates = h.completedDates.filter(d => d !== date);
             let streak = h.streak;
             
-            // If we're removing today's completion, reduce streak
-            if (date === getTodayStr()) {
+            if (date === getTodayStr() && !isStreakActive({...h, completedDates})) {
               streak = Math.max(0, streak - 1);
+              
+              supabase
+                .from('habits')
+                .update({ streak })
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .then(({ error }) => {
+                  if (error) console.error('Error updating streak:', error);
+                });
             }
             
             return { ...h, completedDates, streak };
@@ -281,7 +289,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         toast.success('Habit marked as incomplete');
       } else {
-        // Add completion
         const { error } = await supabase
           .from('habit_completions')
           .insert([
@@ -294,17 +301,15 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         if (error) throw error;
         
-        // Update local state
         setHabits(habits.map(h => {
           if (h.id === id) {
             const completedDates = [...h.completedDates, date].sort();
             let streak = h.streak;
             
-            // If we're completing today, increment streak
             if (date === getTodayStr()) {
-              streak += 1;
+              const maxStreak = calculateMaxStreak(completedDates);
+              streak = Math.max(streak, maxStreak);
               
-              // Also update streak in database
               supabase
                 .from('habits')
                 .update({ streak })
@@ -323,7 +328,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toast.success('Habit marked as complete');
       }
       
-      // Update progress data
       updateProgressForDate(date);
     } catch (error: any) {
       console.error('Error toggling habit completion:', error.message);
@@ -360,7 +364,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
   
   const updateProgressForAll = (habitsData: Habit[]) => {
-    // Calculate progress data for the last 7 days
     const today = new Date();
     const dates = [];
     
