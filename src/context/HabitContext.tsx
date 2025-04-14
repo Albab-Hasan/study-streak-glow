@@ -1,7 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Habit, DailyProgress, WeekDay } from '@/types/habit';
-import { getTodayStr, formatDate } from '@/lib/habitUtils';
+import { Habit, DailyProgress, WeekDay, HabitCategory, HabitFrequency } from '@/types/habit';
+import { 
+  getTodayStr, 
+  formatDate, 
+  castToHabitCategory, 
+  castToHabitFrequency, 
+  castToWeekDayArray 
+} from '@/lib/habitUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -59,16 +65,16 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           (completion) => completion.completed_date
         );
         
-        // Transform database model to our TypeScript model
+        // Transform database model to our TypeScript model with proper type casting
         const transformedHabit: Habit = {
           id: habit.id,
           name: habit.name,
           description: habit.description || '',
-          category: habit.category,
+          category: castToHabitCategory(habit.category),
           icon: habit.icon,
           color: habit.color,
-          frequency: habit.frequency,
-          daysOfWeek: habit.days_of_week as WeekDay[],
+          frequency: castToHabitFrequency(habit.frequency),
+          daysOfWeek: castToWeekDayArray(habit.days_of_week),
           reminderTime: habit.reminder_time,
           notificationsEnabled: habit.notifications_enabled || false,
           createdAt: habit.created_at || new Date().toISOString(),
@@ -153,11 +159,11 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: habit.id,
           name: habit.name,
           description: habit.description || '',
-          category: habit.category,
+          category: castToHabitCategory(habit.category),
           icon: habit.icon,
           color: habit.color,
-          frequency: habit.frequency,
-          daysOfWeek: habit.days_of_week as WeekDay[],
+          frequency: castToHabitFrequency(habit.frequency),
+          daysOfWeek: castToWeekDayArray(habit.days_of_week),
           reminderTime: habit.reminder_time,
           notificationsEnabled: habit.notifications_enabled || false,
           createdAt: habit.created_at || new Date().toISOString(),

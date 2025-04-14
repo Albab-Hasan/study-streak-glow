@@ -1,5 +1,5 @@
 
-import { Habit, WeekDay } from '@/types/habit';
+import { Habit, WeekDay, HabitCategory, HabitFrequency } from '@/types/habit';
 
 export function calculateCompletionPercentage(habits: Habit[], date: string): number {
   if (!habits.length) return 0;
@@ -67,4 +67,28 @@ export function getWeekDates(currentDate: Date = new Date()): string[] {
   }
   
   return dates;
+}
+
+// Helper function to cast database category string to HabitCategory
+export function castToHabitCategory(category: string): HabitCategory {
+  if (category === 'study' || category === 'health' || 
+      category === 'personal' || category === 'social') {
+    return category as HabitCategory;
+  }
+  return 'personal'; // Default fallback
+}
+
+// Helper function to cast database frequency string to HabitFrequency
+export function castToHabitFrequency(frequency: string): HabitFrequency {
+  if (frequency === 'daily' || frequency === 'weekly' || frequency === 'custom') {
+    return frequency as HabitFrequency;
+  }
+  return 'daily'; // Default fallback
+}
+
+// Helper function to cast string array to WeekDay array
+export function castToWeekDayArray(days: string[]): WeekDay[] {
+  return days.filter(day => 
+    ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].includes(day)
+  ) as WeekDay[];
 }
