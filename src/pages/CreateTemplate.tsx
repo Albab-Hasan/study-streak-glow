@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { templateData } from '@/data/templateData';
 import { HabitTemplate } from '@/types/template';
-import { HabitCategory } from '@/types/habit';
+import { HabitCategory, WeekDay } from '@/types/habit';
 import NavBar from '@/components/NavBar';
 
 const CreateTemplate = () => {
@@ -30,6 +31,9 @@ const CreateTemplate = () => {
     habits: []
   });
 
+  // Define a mutable array of weekdays
+  const allWeekDays: WeekDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
   const [newHabit, setNewHabit] = useState({
     name: '',
     description: '',
@@ -37,7 +41,7 @@ const CreateTemplate = () => {
     icon: '📝',
     color: '#F9E79F',
     frequency: 'daily' as const,
-    daysOfWeek: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const,
+    daysOfWeek: [...allWeekDays] as WeekDay[], // Create a new mutable array
     notificationsEnabled: false
   });
 
@@ -49,7 +53,7 @@ const CreateTemplate = () => {
 
     setTemplate(prev => ({
       ...prev,
-      habits: [...(prev.habits || []), newHabit]
+      habits: [...(prev.habits || []), { ...newHabit }] // Create a new object with spread to avoid readonly issues
     }));
 
     setNewHabit({
@@ -59,7 +63,7 @@ const CreateTemplate = () => {
       icon: '📝',
       color: '#F9E79F',
       frequency: 'daily',
-      daysOfWeek: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+      daysOfWeek: [...allWeekDays], // Create a new mutable array
       notificationsEnabled: false
     });
 
