@@ -1,3 +1,4 @@
+
 import { HabitTemplate } from '@/types/template';
 import { HabitCategory, WeekDay } from '@/types/habit';
 
@@ -261,7 +262,7 @@ export const templateData: HabitTemplate[] = [
     habits: [
       {
         name: 'Morning journaling',
-        description: 'Write 3 things you\'re grateful for',
+        description: 'Write 3 things you're grateful for',
         category: 'personal',
         icon: '📝',
         color: '#F9E79F',
