@@ -16,7 +16,6 @@ import EditHabit from "./pages/EditHabit";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
-import Templates from "./pages/Templates";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -66,11 +65,6 @@ const App = () => (
                 <Route path="/search" element={
                   <ProtectedRoute>
                     <Search />
-                  </ProtectedRoute>
-                } />
-                <Route path="/templates" element={
-                  <ProtectedRoute>
-                    <Templates />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
