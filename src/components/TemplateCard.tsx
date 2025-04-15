@@ -5,17 +5,17 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { useHabits } from '@/context/HabitContext';
 import { toast } from 'sonner';
-import { X, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { X, Trash2 } from 'lucide-react';
 
 interface TemplateCardProps {
   template: HabitTemplate;
   onDisable?: () => void;
+  allowDelete?: boolean;
+  onDelete?: () => void;
 }
 
-const TemplateCard = ({ template, onDisable }: TemplateCardProps) => {
+const TemplateCard = ({ template, onDisable, allowDelete, onDelete }: TemplateCardProps) => {
   const { addHabit, habits, deleteHabit } = useHabits();
-  const navigate = useNavigate();
 
   const handleApplyTemplate = () => {
     template.habits.forEach(habit => {
@@ -42,8 +42,11 @@ const TemplateCard = ({ template, onDisable }: TemplateCardProps) => {
     toast.success('Template habits removed successfully');
   };
 
-  const handleCreateCustom = () => {
-    navigate('/templates/create');
+  const handleDeleteTemplate = () => {
+    if (onDelete) {
+      onDelete();
+      toast.success('Custom template deleted successfully');
+    }
   };
 
   return (
@@ -74,27 +77,26 @@ const TemplateCard = ({ template, onDisable }: TemplateCardProps) => {
           </p>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <div className="flex w-full gap-2">
-          <Button onClick={handleApplyTemplate} className="flex-1">
-            Apply Template
-          </Button>
+      <CardFooter className="flex gap-2">
+        <Button onClick={handleApplyTemplate} className="flex-1">
+          Apply Template
+        </Button>
+        <Button 
+          variant="destructive" 
+          size="icon"
+          onClick={handleDisableTemplate}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        {allowDelete && (
           <Button 
             variant="destructive" 
             size="icon"
-            onClick={handleDisableTemplate}
+            onClick={handleDeleteTemplate}
           >
-            <X className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
-        </div>
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={handleCreateCustom}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Create Custom Template
-        </Button>
+        )}
       </CardFooter>
     </Card>
   );
