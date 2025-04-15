@@ -1,6 +1,5 @@
-
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarChart, PlusCircle, User } from 'lucide-react';
+import { Home, BarChart, PlusCircle, User, Layout } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,6 +29,12 @@ const NavBar = () => {
           label="Home"
           active={isActive('/')}
           onClick={() => navigate('/')}
+        />
+        <NavItem
+          icon={<Layout />}
+          label="Templates"
+          active={isActive('/templates')}
+          onClick={() => navigate('/templates')}
         />
         <NavItem
           icon={<BarChart />}

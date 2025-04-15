@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Templates from "./pages/Templates";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +35,11 @@ const App = () => (
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/templates" element={
+                  <ProtectedRoute>
+                    <Templates />
                   </ProtectedRoute>
                 } />
                 <Route path="/habit/:id" element={
