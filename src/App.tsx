@@ -18,6 +18,7 @@ import Search from "./pages/Search";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Templates from "./pages/Templates";
+import CreateTemplate from "./pages/CreateTemplate";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,11 @@ const App = () => (
                 <Route path="/templates" element={
                   <ProtectedRoute>
                     <Templates />
+                  </ProtectedRoute>
+                } />
+                <Route path="/templates/create" element={
+                  <ProtectedRoute>
+                    <CreateTemplate />
                   </ProtectedRoute>
                 } />
                 <Route path="/habit/:id" element={
