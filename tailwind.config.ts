@@ -63,12 +63,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Pastel color categories
+				// Updated vibrant category colors
 				category: {
-					green: "#A3E4D7",  // Soft green
-					purple: "#D4C4FB", // Soft purple
-					yellow: "#F9E79F", // Soft yellow
-					blue: "#AED6F1",   // Soft blue
+					green: "#36EAAC",  // Neon green
+					purple: "#AE7AFF", // Bright purple
+					yellow: "#FFE663", // Vibrant yellow
+					blue: "#63C7FF",   // Bright blue
 				},
 			},
 			fontFamily: {
@@ -126,6 +126,34 @@ export default {
 						transform: 'translateY(10px)'
 					}
 				},
+				'scale-in': {
+					'0%': {
+						transform: 'scale(0.95)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'scale(1)', 
+						opacity: '1'
+					}
+				},
+				'slide-in': {
+					'0%': {
+						transform: 'translateX(-20px)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateX(0)',
+						opacity: '1'
+					}
+				},
+				'glow-pulse': {
+					'0%, 100%': {
+						boxShadow: '0 0 5px rgba(54, 234, 172, 0.5)'
+					},
+					'50%': {
+						boxShadow: '0 0 20px rgba(54, 234, 172, 0.8)'
+					}
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -133,10 +161,17 @@ export default {
 				'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'fade-out': 'fade-out 0.3s ease-out',
+				'scale-in': 'scale-in 0.2s ease-out',
+				'slide-in': 'slide-in 0.3s ease-out',
+				'glow-pulse': 'glow-pulse 2s infinite'
 			},
 			boxShadow: {
-				'neo': '5px 5px 10px rgba(0, 0, 0, 0.15), -5px -5px 10px rgba(255, 255, 255, 0.15)',
-				'neo-inset': 'inset 5px 5px 10px rgba(0, 0, 0, 0.05), inset -5px -5px 10px rgba(255, 255, 255, 0.05)',
+				'neo': '5px 5px 15px rgba(0, 0, 0, 0.3), -5px -5px 15px rgba(255, 255, 255, 0.05)',
+				'neo-inset': 'inset 5px 5px 10px rgba(0, 0, 0, 0.2), inset -5px -5px 10px rgba(255, 255, 255, 0.05)',
+				'glow': '0 0 15px rgba(54, 234, 172, 0.5)',
+			},
+			backdropBlur: {
+				xs: '2px',
 			},
 		}
 	},

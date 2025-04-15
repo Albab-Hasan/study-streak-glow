@@ -7,6 +7,9 @@ interface ProgressRingProps {
   strokeWidth?: number;
   className?: string;
   children?: React.ReactNode;
+  color?: string;
+  bgColor?: string;
+  showAnimation?: boolean;
 }
 
 const ProgressRing = ({
@@ -15,16 +18,23 @@ const ProgressRing = ({
   strokeWidth = 10,
   className = "",
   children,
+  color = "currentColor",
+  bgColor = "currentColor",
+  showAnimation = true,
 }: ProgressRingProps) => {
   const [displayProgress, setDisplayProgress] = useState(0);
   
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (showAnimation) {
+      const timer = setTimeout(() => {
+        setDisplayProgress(progress);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
       setDisplayProgress(progress);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [progress]);
+    }
+  }, [progress, showAnimation]);
   
   // Calculate the properties
   const radius = (size - strokeWidth) / 2;
@@ -32,20 +42,28 @@ const ProgressRing = ({
   const strokeDashoffset = circumference - (displayProgress / 100) * circumference;
   
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div className={`progress-ring-container ${className}`}>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="transform -rotate-90"
       >
+        {/* Glow filter */}
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+        
         {/* Background circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="transparent"
-          stroke="currentColor"
+          stroke={bgColor}
           strokeWidth={strokeWidth}
           className="text-muted opacity-20"
         />
@@ -56,15 +74,16 @@ const ProgressRing = ({
           cy={size / 2}
           r={radius}
           fill="transparent"
-          stroke="currentColor"
+          stroke={color}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           className="text-accent transition-all duration-700 ease-out"
+          filter="url(#glow)"
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="progress-ring-text">
         {children}
       </div>
     </div>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ArrowLeft, Check, Pencil } from 'lucide-react';
 import { 
   Select,
   SelectContent,
@@ -104,158 +104,197 @@ const CreateTemplate = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 animate-fade-in">
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-6">Create Custom Template</h1>
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate(-1)}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Create Custom Template</h1>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Template Name</Label>
-            <Input
-              id="name"
-              value={template.name}
-              onChange={(e) => setTemplate({ ...template, name: e.target.value })}
-              placeholder="e.g., My Study Routine"
-              required
-            />
-          </div>
+          <div className="glass-card p-6 rounded-xl space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">Template Name</Label>
+              <Input
+                id="name"
+                value={template.name}
+                onChange={(e) => setTemplate({ ...template, name: e.target.value })}
+                placeholder="e.g., My Study Routine"
+                required
+                className="bg-secondary/50 border-white/10 focus:border-accent"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={template.description}
-              onChange={(e) => setTemplate({ ...template, description: e.target.value })}
-              placeholder="Describe your template"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+              <Textarea
+                id="description"
+                value={template.description}
+                onChange={(e) => setTemplate({ ...template, description: e.target.value })}
+                placeholder="Describe your template"
+                required
+                className="bg-secondary/50 border-white/10 resize-none focus:border-accent"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              value={template.category}
-              onChange={(e) => setTemplate({ ...template, category: e.target.value })}
-              placeholder="e.g., study, health, personal"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="targetGroup">Target Group</Label>
-            <Input
-              id="targetGroup"
-              value={template.targetGroup}
-              onChange={(e) => setTemplate({ ...template, targetGroup: e.target.value })}
-              placeholder="Who is this template for?"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="goal">Goal</Label>
-            <Input
-              id="goal"
-              value={template.goal}
-              onChange={(e) => setTemplate({ ...template, goal: e.target.value })}
-              placeholder="What's the main goal?"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="intensity">Intensity</Label>
-            <Select
-              value={template.intensity}
-              onValueChange={(value: 'light' | 'normal' | 'intense') => 
-                setTemplate({ ...template, intensity: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select intensity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="intense">Intense</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Template Habits</h2>
-            
-            {template.habits?.map((habit, index) => (
-              <div key={index} className="flex items-center gap-2 p-4 border rounded-lg">
-                <div className="flex-1">
-                  <p className="font-medium">{habit.name}</p>
-                  <p className="text-sm text-muted-foreground">{habit.description}</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemoveHabit(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="text-lg font-medium">Add New Habit</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="habitName">Habit Name</Label>
-                <Input
-                  id="habitName"
-                  value={newHabit.name}
-                  onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-                  placeholder="e.g., Study for 2 hours"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="habitDescription">Description</Label>
-                <Textarea
-                  id="habitDescription"
-                  value={newHabit.description}
-                  onChange={(e) => setNewHabit({ ...newHabit, description: e.target.value })}
-                  placeholder="Describe the habit"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="habitCategory">Category</Label>
-                <Select
-                  value={newHabit.category}
-                  onValueChange={(value: HabitCategory) => 
-                    setNewHabit({ ...newHabit, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal">Personal</SelectItem>
-                    <SelectItem value="work">Work</SelectItem>
-                    <SelectItem value="health">Health</SelectItem>
-                    <SelectItem value="study">Study</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button 
-                type="button"
-                onClick={handleAddHabit}
-                className="w-full"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Habit to Template
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+              <Input
+                id="category"
+                value={template.category}
+                onChange={(e) => setTemplate({ ...template, category: e.target.value })}
+                placeholder="e.g., study, health, personal"
+                required
+                className="bg-secondary/50 border-white/10 focus:border-accent"
+              />
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
+          <div className="glass-card p-6 rounded-xl space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="targetGroup" className="text-sm font-medium">Target Group</Label>
+              <Input
+                id="targetGroup"
+                value={template.targetGroup}
+                onChange={(e) => setTemplate({ ...template, targetGroup: e.target.value })}
+                placeholder="Who is this template for?"
+                className="bg-secondary/50 border-white/10 focus:border-accent"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="goal" className="text-sm font-medium">Goal</Label>
+              <Input
+                id="goal"
+                value={template.goal}
+                onChange={(e) => setTemplate({ ...template, goal: e.target.value })}
+                placeholder="What's the main goal?"
+                className="bg-secondary/50 border-white/10 focus:border-accent"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="intensity" className="text-sm font-medium">Intensity</Label>
+              <Select
+                value={template.intensity}
+                onValueChange={(value: 'light' | 'normal' | 'intense') => 
+                  setTemplate({ ...template, intensity: value })
+                }
+              >
+                <SelectTrigger className="bg-secondary/50 border-white/10">
+                  <SelectValue placeholder="Select intensity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="intense">Intense</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <span className="text-accent mr-2">·</span> Template Habits
+            </h2>
+            
+            <div className="stagger-list">
+              {template.habits?.map((habit, index) => (
+                <div 
+                  key={index} 
+                  className="glass-card flex items-center gap-2 p-4 rounded-xl mb-3 backdrop-blur-lg"
+                >
+                  <div 
+                    className="w-2 h-full rounded-full"
+                    style={{ backgroundColor: habit.color }}
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium">{habit.name}</p>
+                    <p className="text-sm text-muted-foreground">{habit.description}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveHabit(index)}
+                    className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="neo-card p-6 rounded-xl">
+              <h3 className="text-lg font-medium flex items-center mb-4">
+                <Plus className="h-4 w-4 mr-2 text-accent" /> 
+                Add New Habit
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="habitName" className="text-sm font-medium">Habit Name</Label>
+                  <Input
+                    id="habitName"
+                    value={newHabit.name}
+                    onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
+                    placeholder="e.g., Study for 2 hours"
+                    className="bg-secondary/50 border-white/10 focus:border-accent"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="habitDescription" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="habitDescription"
+                    value={newHabit.description}
+                    onChange={(e) => setNewHabit({ ...newHabit, description: e.target.value })}
+                    placeholder="Describe the habit"
+                    className="bg-secondary/50 border-white/10 resize-none focus:border-accent h-20"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="habitCategory" className="text-sm font-medium">Category</Label>
+                  <Select
+                    value={newHabit.category}
+                    onValueChange={(value: HabitCategory) => 
+                      setNewHabit({ ...newHabit, category: value })
+                    }
+                  >
+                    <SelectTrigger className="bg-secondary/50 border-white/10">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="health">Health</SelectItem>
+                      <SelectItem value="study">Study</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  type="button"
+                  onClick={handleAddHabit}
+                  className="w-full accent-gradient"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Habit to Template
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full accent-gradient py-6 font-semibold">
+            <Check className="mr-2 h-5 w-5" />
             Create Template
           </Button>
         </form>
