@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarChart, PlusCircle, MessageSquare, User } from 'lucide-react';
+import { Home, BarChart, PlusCircle, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 
@@ -43,17 +43,17 @@ const NavBar = () => {
             onClick={() => navigate('/')}
           />
           <NavItem
-            icon={<MessageSquare className="w-6 h-6" />}
-            label="Messages"
-            active={isActive('/messages')}
-            onClick={() => navigate('/messages')}
-          />
-          <div className="w-12" /> {/* Spacer for center button */}
-          <NavItem
             icon={<BarChart className="w-6 h-6" />}
             label="Analytics"
             active={isActive('/analytics')}
             onClick={() => navigate('/analytics')}
+          />
+          <div className="w-12" /> {/* Spacer for center button */}
+          <NavItem
+            icon={<Home className="w-6 h-6" />}
+            label="Templates"
+            active={isActive('/templates')}
+            onClick={() => navigate('/templates')}
           />
           <NavItem
             icon={<User className="w-6 h-6" />}
@@ -91,3 +91,4 @@ const NavItem = ({ icon, label, active, onClick }: NavItemProps) => {
 };
 
 export default NavBar;
+
