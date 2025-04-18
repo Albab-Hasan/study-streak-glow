@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useHabits } from '@/context/HabitContext';
 import { useAuth } from '@/context/AuthContext';
@@ -31,9 +30,41 @@ import {
   Clock,
   Settings,
   LogOut,
+  Trophy,
 } from 'lucide-react';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import { toast } from 'sonner';
+import AchievementCard from '@/components/AchievementCard';
+import { Achievement } from '@/types/achievement';
+
+const mockAchievements: Achievement[] = [
+  {
+    id: '1',
+    name: '7-Day Warrior',
+    description: 'Maintain a 7-day streak in any habit',
+    icon: '🏆',
+    type: 'streak',
+    threshold: 7,
+    unlockedAt: '2024-04-15',
+  },
+  {
+    id: '2',
+    name: 'Habit Master',
+    description: 'Complete all daily habits for 5 consecutive days',
+    icon: '⭐',
+    type: 'completion',
+    threshold: 5,
+  },
+  {
+    id: '3',
+    name: 'Early Bird',
+    description: 'Complete a morning routine for 3 days straight',
+    icon: '🌅',
+    type: 'challenge',
+    threshold: 3,
+    unlockedAt: '2024-04-16',
+  },
+];
 
 const Profile = () => {
   const { habits } = useHabits();
@@ -42,7 +73,8 @@ const Profile = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  
+  const [gamificationEnabled, setGamificationEnabled] = useState(true);
+
   const exportData = () => {
     try {
       const dataStr = JSON.stringify(habits, null, 2);
@@ -97,9 +129,10 @@ const Profile = () => {
           </Button>
         </div>
         
-        <Tabs defaultValue="settings">
-          <TabsList className="grid grid-cols-2 mb-6">
+        <Tabs defaultValue="settings" className="px-4 mt-6">
+          <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro</TabsTrigger>
           </TabsList>
           
@@ -123,6 +156,18 @@ const Profile = () => {
                     id="theme-mode"
                     checked={theme === 'dark'}
                     onCheckedChange={toggleTheme}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="h-5 w-5" />
+                    <Label htmlFor="gamification">Gamification</Label>
+                  </div>
+                  <Switch
+                    id="gamification"
+                    checked={gamificationEnabled}
+                    onCheckedChange={setGamificationEnabled}
                   />
                 </div>
               </CardContent>
@@ -207,6 +252,45 @@ const Profile = () => {
                 </p>
               </CardFooter>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="achievements">
+            {gamificationEnabled ? (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Achievements</CardTitle>
+                    <CardDescription>
+                      Track your progress and unlock rewards
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {mockAchievements.map((achievement) => (
+                      <AchievementCard 
+                        key={achievement.id} 
+                        achievement={achievement}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <Trophy className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Gamification is disabled</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Enable gamification in settings to track achievements and unlock rewards
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setGamificationEnabled(true)}
+                  >
+                    Enable Gamification
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
           <TabsContent value="pomodoro">
